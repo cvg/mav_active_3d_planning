@@ -40,4 +40,6 @@ if __name__ == '__main__':
         publishing_on_topic = topic + '/transform'
         transform_pubs[publishing_on_topic] = rospy.Publisher(publishing_on_topic, TransformStamped, queue_size=5)
 
+    # spin
+    rospy.spin()
 
