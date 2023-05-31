@@ -51,17 +51,29 @@ bool TrajectoryGenerator::checkTraversable(const Eigen::Vector3d& position) {
 bool TrajectoryGenerator::checkMultiRobotCollision(const Eigen::Vector3d& position) {
   // Add a mutex for recent_goal_poses_
   std::lock_guard<std::mutex> lock(recent_goal_poses_mutex_);
+
+  // Check if recent_goal_poses_ is initialized
+  if (!recent_goal_poses_) {
+    std::cout << "recent_goal_poses_ is not initialized!" << std::endl;
+    return false;
+  }
   // Go through all the recent_goal_poses_ and check if position is within radius
   for (auto it = recent_goal_poses_->begin(); it != recent_goal_poses_->end(); ++it) {
 
+    int count = 0;
     // Go through all elements in FixedQueue
     for (auto it_q = (it->second).begin(); it_q != (it->second).end(); ++it_q) {
+      count++;
       // Get the pose and quat from element
       Eigen::Vector3d pose = it_q->first;
       Eigen::Vector4d quat = it_q->second;
 
+      // Check with printing count
+      std::cout << "Checking collision with robot " << "count: " << count << std::endl;
+
       // Check if position is within radius and if quat is within yaw margin return true
       if ((pose - position).norm() < p_robot_radius_) {
+        std::cout << "Found collision!" << std::endl;
         return true;
       }
     }
@@ -71,6 +83,7 @@ bool TrajectoryGenerator::checkMultiRobotCollision(const Eigen::Vector3d& positi
     //   return true;
     // }
   }
+  std::cout << "No collision with other robots!" << std::endl;
   return false;
 }
 
