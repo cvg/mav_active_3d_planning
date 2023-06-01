@@ -75,8 +75,6 @@ class TrajectoryGenerator : public Module {
   double p_clearing_radius_;  // Unknown space within clearing radius is
   // considered traversable
   double p_robot_radius_;     // robot radius for multi-agent collaborative exploration
-  std::string p_robot_frame_id_; // the robot frame id for this robot
-                                        // to identify which robot this is
   size_t p_keep_last_n_; // Keep the last n goal poses for multi-agent
                           // collaborative exploration
   std::string p_selector_args_;

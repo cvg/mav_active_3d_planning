@@ -14,7 +14,6 @@ void TrajectoryGenerator::setupFromParamMap(Module::ParamMap* param_map) {
                  false);
   setParam<double>(param_map, "clearing_radius", &p_clearing_radius_, 0.0);
   setParam<double>(param_map, "robot_radius", &p_robot_radius_, 1.0); // Avoid sample within robot pose radius
-  setParam<std::string>(param_map, "robot_frame_id", &p_robot_frame_id_, "");
   std::string ns = (*param_map)["param_namespace"];
   setParam<std::string>(param_map, "segment_selector_args", &p_selector_args_,
                         ns + "/segment_selector");
@@ -60,20 +59,14 @@ bool TrajectoryGenerator::checkMultiRobotCollision(const Eigen::Vector3d& positi
   // Go through all the recent_goal_poses_ and check if position is within radius
   for (auto it = recent_goal_poses_->begin(); it != recent_goal_poses_->end(); ++it) {
 
-    int count = 0;
     // Go through all elements in FixedQueue
     for (auto it_q = (it->second).begin(); it_q != (it->second).end(); ++it_q) {
-      count++;
       // Get the pose and quat from element
       Eigen::Vector3d pose = it_q->first;
       Eigen::Vector4d quat = it_q->second;
 
-      // Check with printing count
-      std::cout << "Checking collision with robot " << "count: " << count << std::endl;
-
       // Check if position is within radius and if quat is within yaw margin return true
       if ((pose - position).norm() < p_robot_radius_) {
-        std::cout << "Found collision!" << std::endl;
         return true;
       }
     }
@@ -83,7 +76,6 @@ bool TrajectoryGenerator::checkMultiRobotCollision(const Eigen::Vector3d& positi
     //   return true;
     // }
   }
-  std::cout << "No collision with other robots!" << std::endl;
   return false;
 }
 

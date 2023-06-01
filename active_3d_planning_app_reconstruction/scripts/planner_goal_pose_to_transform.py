@@ -4,10 +4,7 @@ import tf
 from geometry_msgs.msg import PoseStamped, TransformStamped
 from nav_msgs.msg import Path
 
-def callback(msg, callback_args):
-    # get topic and frame_id from callback_args
-    topic = callback_args[0]
-    frame_id = callback_args[1]
+def callback(msg, topic):
 
     # Get the last pose in the path
     goal_pose = msg.poses[-1]
@@ -26,22 +23,26 @@ def callback(msg, callback_args):
 
     # publish transform as a message using tranform_pubs
     publishing_on_topic = topic + '/transform'
+    rospy.loginfo("publishing to " + str(publishing_on_topic))
     transform_pubs[publishing_on_topic].publish(t)
 
 # main function
 if __name__ == '__main__':
     # setup ros node
-    rospy.init_node('planner_goal_pose_to_transform')
+    rospy.init_node('planner_goal_pose_to_transform', anonymous=True)
 
-    # get topic names from parameter server, should be the paths
-    goal_pose_topics = ['/planner/command/trajectory_path'] # TODO: change for multi-agent
-    goal_pose_frame_id_dict = {'/planner/command/trajectory_path': 'anymal'} # TODO: change for multi-agent
+    # get topic names from rosparam
+    goal_pose_topics = rospy.get_param('/goal_topics', '')
+    goal_pose_topics = goal_pose_topics.split(',')
+    goal_pose_topics = [x.strip() for x in goal_pose_topics]
+
+    rospy.loginfo("goal_pose_topics " + str(goal_pose_topics))
 
     # set up subscribers and publishers with callback that passes in message
     goal_pose_subs = {}
     transform_pubs = {}
     for topic in goal_pose_topics:
-        goal_pose_subs[topic] = rospy.Subscriber(topic, Path, callback, callback_args=(topic, goal_pose_frame_id_dict[topic]), queue_size=1)
+        goal_pose_subs[topic] = rospy.Subscriber(topic, Path, callback, topic, queue_size=1)
         publishing_on_topic = topic + '/transform'
         transform_pubs[publishing_on_topic] = rospy.Publisher(publishing_on_topic, TransformStamped, queue_size=5)
 

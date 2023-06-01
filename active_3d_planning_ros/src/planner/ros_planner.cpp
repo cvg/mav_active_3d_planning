@@ -47,7 +47,8 @@ RosPlanner::RosPlanner(const ::ros::NodeHandle& nh,
     std::stringstream ss(p_goal_topics_);
     std::string topic;
     while (std::getline(ss, topic, ',')) {
-      goal_subs_.push_back(nh_.subscribe(topic, 1, &RosPlanner::goalCallback,
+      std::cout << "Subscribing to " << topic << "/transform" << std::endl;
+      goal_subs_.push_back(nh_.subscribe(topic + "/transform", 1, &RosPlanner::goalCallback,
                                         this));
     }
   }
@@ -66,9 +67,10 @@ void RosPlanner::setupFromParamMap(Module::ParamMap* param_map) {
   setParam<double>(param_map, "replan_yaw_threshold", &p_replan_yaw_threshold_,
                    0.1);
 
-  // Param of list of topics
-  setParam<std::string>(param_map, "goal_topics", &p_goal_topics_,
-                                     std::string());
+  // Param of list of topics from ROS param
+  nh_.getParam("/goal_topics", p_goal_topics_);
+  // setParam<std::string>(param_map, "goal_topics", &p_goal_topics_,
+                                    //  std::string());
 }
 
 void RosPlanner::setupFactoryAndParams(ModuleFactory* factory,

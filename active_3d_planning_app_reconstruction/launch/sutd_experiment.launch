@@ -1,4 +1,4 @@
-<launch>
+<!-- <launch>
 <!-- Gazebo arguments -->
 <arg name="mav_name" default="firefly"/>
 <arg name="gui" default="false"/>
@@ -13,8 +13,8 @@
 <arg name="method" default="merged"/>
 <arg name="verbose_voxblox" default="false"/>
 
-  <!--  Experiment arguments -->  
-<arg name="experiment_config" default="Matterport.yaml"/>
+<!--  Experiment arguments -->  
+<arg name="experiment_config" default="Maze.yaml"/>
 <rosparam command="load" file="$(find active_3d_planning_app_reconstruction)/cfg/experiments/$(arg experiment_config)"/>
 
 <!-- Planner arguments-->
@@ -22,7 +22,7 @@
 
 <group ns="planner">
 <!-- Voxblox -->
-<node name="voxblox_node" pkg="voxblox_ros" type="esdf_server" output="screen" args="-alsologtostderr">
+<!-- <node name="voxblox_node" pkg="voxblox_ros" type="esdf_server" output="screen" args="-alsologtostderr">
  <remap from="pointcloud" to="/anymal/downsampled_points"/>
  <param name="use_tf_transforms" value="true"/>
  <rosparam command="load" file="$(find active_3d_planning_app_reconstruction)/cfg/voxblox/transforms.yaml"/> 
@@ -36,14 +36,14 @@
  <param name="max_ray_length" value="$(arg ray_length)" />
  <param name="allow_clear" value="true" />
  <param name="verbose" value="$(arg verbose_voxblox)" />
-</node>
+</node> -->
 
  <!-- Planner -->
-
  <node name="planner_node" pkg="active_3d_planning_app_reconstruction" type="reconstruction_planner_node" output="screen">
 
  <!-- Voxblox Server -->
- <remap from="planner_node/esdf_map_in" to="voxblox_node/esdf_map_out" />
+ <!-- <remap from="planner_node/esdf_map_in" to="voxblox_node/esdf_map_out" /> -->
+ <remap from="planner_node/esdf_map_in" to="/esdf_map_out" />
  <remap from="planner_node/tsdf_map_in" to="voxblox_node/tsdf_map_out" />
  <param name="use_tf_transforms" value="false" />
  <param name="tsdf_voxel_size" value="$(arg voxel_size)" />
@@ -53,10 +53,9 @@
  <param name="publish_pointclouds" value="false" />
 
  <!-- General Settings -->
- <remap from="odometry" to="/anymal/odom" />
+ <!-- <remap from="odometry" to="/anymal/odom" /> -->
+ <remap from="odometry" to="/spot/odometry_in_map" />
  <remap from="command/trajectory" to="/anymal/command/trajectory" />
-
-
 
  <!-- Build the Planner by Configuration -->
  <rosparam command="load" file="$(find active_3d_planning_app_reconstruction)/cfg/$(arg planner_config)"/>
@@ -70,4 +69,4 @@
  <!-- Planner Goal Pose Transform Script -->
  <node name="planner_goal_pose_to_transform" pkg="active_3d_planning_app_reconstruction" type="planner_goal_pose_to_transform.py" output="screen"/>
 
-</launch>
+</launch> -->

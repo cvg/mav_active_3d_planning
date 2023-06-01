@@ -1,4 +1,4 @@
-<launch>
+<!-- <launch>
 <!-- Gazebo arguments -->
 <arg name="mav_name" default="firefly"/>
 <arg name="gui" default="false"/>
@@ -64,4 +64,4 @@
 
  <!-- Planner Goal Pose Transform Script -->
  <node name="planner_goal_pose_to_transform" pkg="mav_active_3d_planning" type="planner_goal_pose_to_transform.py" output="screen"/>
-</launch>
+</launch> -->

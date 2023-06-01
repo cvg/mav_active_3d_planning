@@ -1,4 +1,4 @@
-<launch>
+<!-- <launch>
 <!-- Gazebo arguments -->
 <arg name="mav_name" default="firefly"/>
 <arg name="gui" default="false"/>
@@ -74,4 +74,4 @@
  <!-- RVIZ Visualization -->
  <node type="rviz" name="rviz_voxblox" pkg="rviz" args="-d /tmp/cfg/experiments/experiment_visualization.rviz"/>
 
-</launch>
+</launch> -->
