@@ -83,6 +83,9 @@ class RRT : public TrajectoryGenerator {
   int p_maximum_tries_;  // sampling tries, 0 for inf
   double p_min_path_length_;  // disallow all segments shorter than min length
 
+  // boysun dynamic height adaptor
+  double current_z = -100;
+
   // kdtree
   std::unique_ptr<KDTree> kdtree_;
   TreeData tree_data_;
