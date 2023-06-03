@@ -104,16 +104,17 @@ bool RRT::selectSegment(TrajectorySegment** result, TrajectorySegment* root) {
   bool goal_found = false;
   Eigen::Vector3d goal_pos;
   int counter = 0;
-  std::cout << "[rrt] start sampling " << std::endl;
   // boysun
+  // std::cout << "[rrt] start sampling " << std::endl;
   // std::cout << "current pos: " << planner_.getCurrentPosition() <<std::endl;
   // std::cout << "current height: " << planner_.getCurrentPosition()[2] << std::endl;
   // reset bbox z if changes too much
-  if (std::abs(current_z - planner_.getCurrentPosition()[2]) > 0.2)
+  if (std::abs(current_z - planner_.getCurrentPosition()[2]) > 0.05)
   {
-    std::cout << "height changes, reset bbox z dim" << std::endl;
+    std::cout << "[rrt] height changes, reset bbox z dim" << std::endl;
     bounding_volume_->z_max =  planner_.getCurrentPosition()[2] + 0.1;
     bounding_volume_->z_min =  planner_.getCurrentPosition()[2] - 0.1;
+    std::cout << "current z bbox [max min] " << bounding_volume_->z_max << " , " << bounding_volume_->z_min << std::endl;
     current_z = planner_.getCurrentPosition()[2];
   }
 
