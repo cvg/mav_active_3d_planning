@@ -62,7 +62,10 @@ class RosPlanner : public OnlinePlanner {
   ::ros::Publisher target_pub_path_;
   ::ros::Publisher trajectory_vis_pub_;
   ::ros::ServiceServer run_srv_;
-  ::ros::ServiceServer get_cpu_time_srv_;
+  ::ros::ServiceServer get_cpu_time_srv_; 
+
+  ::ros::Timer request_traj_timer_;
+  bool waiting_for_trajectory_;
 
   // Array of subscribers for robot goal pose
   std::vector<::ros::Subscriber> goal_subs_;

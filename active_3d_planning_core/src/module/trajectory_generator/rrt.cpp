@@ -124,8 +124,7 @@ bool RRT::selectSegment(TrajectorySegment** result, TrajectorySegment* root) {
     }
     goal_pos = root->trajectory.back().position_W;
     sampleGoal(&goal_pos);
-    if (!checkMultiRobotCollision(goal_pos_) && (p_crop_segments_ || checkTraversable(goal_pos))) {
-      std::cout << "Found valid goal" << std::endl;
+    if ((p_crop_segments_ || checkTraversable(goal_pos)) && !checkMultiRobotCollision(goal_pos)) {
       goal_found = true;
     }
   }
@@ -189,6 +188,7 @@ bool RRT::expandSegment(TrajectorySegment* target,
   tree_data_.addSegment(new_segment);
   kdtree_->addPoints(tree_data_.points.size() - 1,
                      tree_data_.points.size() - 1);
+
   return true;
 }
 
