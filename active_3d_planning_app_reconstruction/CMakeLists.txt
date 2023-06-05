@@ -9,6 +9,9 @@ add_definitions(-std=c++17)
 
 catkin_package()
 
+catkin_install_python(PROGRAMS scripts/planner_goal_pose_to_transform.py
+                         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+
 cs_add_executable(eval_voxblox_node
         src/experiments/eval_voxblox_node.cpp
         )

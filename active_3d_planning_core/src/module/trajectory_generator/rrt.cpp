@@ -104,13 +104,27 @@ bool RRT::selectSegment(TrajectorySegment** result, TrajectorySegment* root) {
   bool goal_found = false;
   Eigen::Vector3d goal_pos;
   int counter = 0;
+  // boysun
+  // std::cout << "[rrt] start sampling " << std::endl;
+  // std::cout << "current pos: " << planner_.getCurrentPosition() <<std::endl;
+  // std::cout << "current height: " << planner_.getCurrentPosition()[2] << std::endl;
+  // reset bbox z if changes too much
+  if (std::abs(current_z - planner_.getCurrentPosition()[2]) > 0.05)
+  {
+    std::cout << "[rrt] height changes, reset bbox z dim" << std::endl;
+    bounding_volume_->z_max =  planner_.getCurrentPosition()[2] + 0.1;
+    bounding_volume_->z_min =  planner_.getCurrentPosition()[2] - 0.1;
+    std::cout << "current z bbox [max min] " << bounding_volume_->z_max << " , " << bounding_volume_->z_min << std::endl;
+    current_z = planner_.getCurrentPosition()[2];
+  }
+
   while (!goal_found && counter <= p_maximum_tries_) {
     if (p_maximum_tries_ > 0) {
       counter++;
     }
     goal_pos = root->trajectory.back().position_W;
     sampleGoal(&goal_pos);
-    if (p_crop_segments_ || checkTraversable(goal_pos)) {
+    if ((p_crop_segments_ || checkTraversable(goal_pos)) && !checkMultiRobotCollision(goal_pos)) {
       goal_found = true;
     }
   }
@@ -174,6 +188,7 @@ bool RRT::expandSegment(TrajectorySegment* target,
   tree_data_.addSegment(new_segment);
   kdtree_->addPoints(tree_data_.points.size() - 1,
                      tree_data_.points.size() - 1);
+
   return true;
 }
 

@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <mutex>
 
 #include <Eigen/Core>
 
@@ -12,6 +13,8 @@
 #include "active_3d_planning_core/module/module_factory_registry.h"
 #include "active_3d_planning_core/planner/planner_I.h"
 #include "active_3d_planning_core/tools/defaults.h"
+
+#include "active_3d_planning_core/tools/fixedqueue.h"
 
 namespace active_3d_planning {
 
@@ -44,6 +47,15 @@ class TrajectoryGenerator : public Module {
   // reachable.
   bool checkTraversable(const Eigen::Vector3d& position);
 
+  // Utility function for multi-agent coordination. Returns true if the position is
+  // far away from all other goal positions
+  bool checkMultiRobotCollision(const Eigen::Vector3d& position);
+
+  // Update the goal(s) of the generator
+  bool updateGoals(const std::string& frame_id,
+                           const Eigen::Vector3d& pose,
+                           const Eigen::Vector4d& quat);
+
   // in case a trajectory needs to be modified to be published
   virtual bool extractTrajectoryToPublish(
       EigenTrajectoryPointVector* trajectory, const TrajectorySegment& segment);
@@ -62,8 +74,17 @@ class TrajectoryGenerator : public Module {
   bool p_collision_optimistic_;
   double p_clearing_radius_;  // Unknown space within clearing radius is
   // considered traversable
+  double p_robot_radius_;     // robot radius for multi-agent collaborative exploration
+  size_t p_keep_last_n_; // Keep the last n goal poses for multi-agent
+                          // collaborative exploration
   std::string p_selector_args_;
   std::string p_updater_args_;
+
+  // std pair of eigen vector 3d and eigen vector 4d
+  typedef std::pair<Eigen::Vector3d, Eigen::Vector4d> EigenVector3d4d;
+  // Dictionary to keep track of goals
+  std::unique_ptr<std::map<std::string, FixedQueue<EigenVector3d4d>>> recent_goal_poses_;
+  std::mutex recent_goal_poses_mutex_;
 };
 
 // Abstract encapsulation for default/modular implementations of the

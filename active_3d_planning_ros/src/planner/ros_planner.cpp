@@ -20,7 +20,7 @@ namespace ros {
 RosPlanner::RosPlanner(const ::ros::NodeHandle& nh,
                        const ::ros::NodeHandle& nh_private,
                        ModuleFactory* factory, Module::ParamMap* param_map)
-    : OnlinePlanner(factory, param_map), nh_(nh), nh_private_(nh_private) {
+    : OnlinePlanner(factory, param_map), nh_(nh), nh_private_(nh_private), waiting_for_trajectory_(false) {
   // params
   RosPlanner::setupFromParamMap(param_map);
   perf_log_data_ = std::vector<double>(
@@ -40,6 +40,19 @@ RosPlanner::RosPlanner(const ::ros::NodeHandle& nh,
   get_cpu_time_srv_ = nh_private_.advertiseService(
       "get_cpu_time", &RosPlanner::cpuSrvCallback, this);
 
+  // Iterate through goal_topics delimited by ',' and subscribe to each
+  if (p_goal_topics_.empty()) {
+    ROS_ERROR("No goal topics specified!");
+  } else {
+    std::stringstream ss(p_goal_topics_);
+    std::string topic;
+    while (std::getline(ss, topic, ',')) {
+      std::cout << "Subscribing to " << topic << "/transform" << std::endl;
+      goal_subs_.push_back(nh_.subscribe(topic + "/transform", 1, &RosPlanner::goalCallback,
+                                        this));
+    }
+  }
+
   // Finish
   ROS_INFO_STREAM(
       "\n******************** Initialized Planner ********************\n"
@@ -53,6 +66,14 @@ void RosPlanner::setupFromParamMap(Module::ParamMap* param_map) {
                    0.1);
   setParam<double>(param_map, "replan_yaw_threshold", &p_replan_yaw_threshold_,
                    0.1);
+  setParam<double>(param_map, "replan_delay_sec", &p_replan_delay_sec_, 5.0);
+  setParam<double>(param_map, "replan_timeout", &p_replan_timeout_, 10.0);
+  
+
+  // Param of list of topics from ROS param
+  nh_.getParam("/goal_topics", p_goal_topics_);
+  // setParam<std::string>(param_map, "goal_topics", &p_goal_topics_,
+                                    //  std::string());
 }
 
 void RosPlanner::setupFactoryAndParams(ModuleFactory* factory,
@@ -113,10 +134,22 @@ void RosPlanner::planningLoop() {
 }
 
 bool RosPlanner::requestNextTrajectory() {
-  // call standard procedure
-  if (!OnlinePlanner::requestNextTrajectory()) {
-    return false;
+  // Set a timer
+  if (waiting_for_trajectory_) {
+    return true;
   }
+  waiting_for_trajectory_ = true;
+  request_traj_timer_ = nh_.createTimer(::ros::Duration(p_replan_delay_sec_), [this](const ::ros::TimerEvent&){
+    OnlinePlanner::requestNextTrajectory();
+    this->waiting_for_trajectory_ = false;
+
+    // Give timer replan_timeout until next timer gets triggered
+    this->request_traj_timer_ = this->nh_.createTimer(::ros::Duration(this->p_replan_timeout_), [this](const ::ros::TimerEvent&) {
+      this->requestNextTrajectory();
+
+    }, true, true);
+  }, true, true);
+  // OnlinePlanner::requestNextTrajectory();
 
   // Performance log
   if (p_log_performance_) {
@@ -151,6 +184,29 @@ void RosPlanner::odomCallback(const nav_msgs::Odometry& msg) {
       }
     }
   }
+}
+
+void RosPlanner::goalCallback(const geometry_msgs::TransformStamped& msg) {
+  // Get child frame id
+  const std::string& unique_id = msg.child_frame_id;
+  if (unique_id.empty()) {
+    LOG(WARNING) << "Received transform without child frame id";
+    return;
+  }
+
+  // Extract pose from TransformStamped into a Vector3d
+  Eigen::Vector3d pose;
+  pose.x() = msg.transform.translation.x;
+  pose.y() = msg.transform.translation.y;
+  pose.z() = msg.transform.translation.z;
+  Eigen::Vector4d quat;
+  quat.x() = msg.transform.rotation.x;
+  quat.y() = msg.transform.rotation.y;
+  quat.z() = msg.transform.rotation.z;
+  quat.w() = msg.transform.rotation.w;
+
+  // Update trajectory generator, pass by reference
+  trajectory_generator_->updateGoals(unique_id, pose, quat);
 }
 
 void RosPlanner::requestMovement(const EigenTrajectoryPointVector& trajectory) {

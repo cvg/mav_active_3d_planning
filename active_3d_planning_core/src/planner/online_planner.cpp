@@ -245,6 +245,7 @@ void OnlinePlanner::verifyTree(TrajectorySegment* next_segment) {
 bool OnlinePlanner::requestNextTrajectory() {
   if (current_segment_->children.empty()) {
     // No trajectories available: call the backtracker
+    std::cout << "Backtracking..." << std::endl;
     back_tracker_->trackBack(current_segment_.get());
     return false;
   }

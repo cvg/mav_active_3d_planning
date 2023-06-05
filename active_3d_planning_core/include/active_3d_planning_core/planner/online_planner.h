@@ -65,6 +65,8 @@ class OnlinePlanner : public PlannerI, public ModuleBase {
 
   void printError(const std::string& text) override;
 
+  // virtual bool requestNextTrajectory();
+
  protected:
   // factory access
   ModuleFactory* factory_;

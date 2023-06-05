@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <nav_msgs/Odometry.h>
+#include <geometry_msgs/TransformStamped.h>
 #include <ros/ros.h>
 #include <std_srvs/SetBool.h>
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
@@ -28,6 +29,7 @@ class RosPlanner : public OnlinePlanner {
 
   // ros callbacks
   void odomCallback(const nav_msgs::Odometry& msg);
+  void goalCallback(const geometry_msgs::TransformStamped& msg);
 
   bool runSrvCallback(std_srvs::SetBool::Request& req,    // NOLINT
                       std_srvs::SetBool::Response& res);  // NOLINT
@@ -60,7 +62,13 @@ class RosPlanner : public OnlinePlanner {
   ::ros::Publisher target_pub_path_;
   ::ros::Publisher trajectory_vis_pub_;
   ::ros::ServiceServer run_srv_;
-  ::ros::ServiceServer get_cpu_time_srv_;
+  ::ros::ServiceServer get_cpu_time_srv_; 
+
+  ::ros::Timer request_traj_timer_;
+  bool waiting_for_trajectory_;
+
+  // Array of subscribers for robot goal pose
+  std::vector<::ros::Subscriber> goal_subs_;
 
   // variables
   ::ros::Time ros_timing_;      // track simulated time
@@ -68,10 +76,13 @@ class RosPlanner : public OnlinePlanner {
   std::map<std::string, int>
       visualization_overwrite_counter_;  // store the previous number of
                                          // visualizations to overwrite in RVIZ
-
+                                         
   // params
   double p_replan_pos_threshold_;  // m, when is the goal considered reached
   double p_replan_yaw_threshold_;  // rad
+  double p_replan_delay_sec_;  // number of seconds to wait before the planner replans, allows time for reaching goal
+  double p_replan_timeout_; // allows the robot timeout seconds to reach the target, otherwise trigger countdown to replan
+  std::string p_goal_topics_;  // topic names for robot goal poses, multi-agent
 
   // override/adapt planner methods
   void initializePlanning() override;
@@ -81,6 +92,7 @@ class RosPlanner : public OnlinePlanner {
   void requestMovement(const EigenTrajectoryPointVector& trajectory) override;
 
   void setupFromParamMap(Module::ParamMap* param_map) override;
+
 };
 
 }  // namespace ros
