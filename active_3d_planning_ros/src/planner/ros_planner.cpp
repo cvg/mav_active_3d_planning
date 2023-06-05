@@ -66,6 +66,9 @@ void RosPlanner::setupFromParamMap(Module::ParamMap* param_map) {
                    0.1);
   setParam<double>(param_map, "replan_yaw_threshold", &p_replan_yaw_threshold_,
                    0.1);
+  setParam<double>(param_map, "replan_delay_sec", &p_replan_delay_sec_, 5.0);
+  setParam<double>(param_map, "replan_timeout", &p_replan_timeout_, 10.0);
+  
 
   // Param of list of topics from ROS param
   nh_.getParam("/goal_topics", p_goal_topics_);
@@ -136,9 +139,15 @@ bool RosPlanner::requestNextTrajectory() {
     return true;
   }
   waiting_for_trajectory_ = true;
-  request_traj_timer_ = nh_.createTimer(::ros::Duration(5), [this](const ::ros::TimerEvent&){
+  request_traj_timer_ = nh_.createTimer(::ros::Duration(p_replan_delay_sec_), [this](const ::ros::TimerEvent&){
     OnlinePlanner::requestNextTrajectory();
     this->waiting_for_trajectory_ = false;
+
+    // Give timer replan_timeout until next timer gets triggered
+    this->request_traj_timer_ = this->nh_.createTimer(::ros::Duration(this->p_replan_timeout_), [this](const ::ros::TimerEvent&) {
+      this->requestNextTrajectory();
+
+    }, true, true);
   }, true, true);
   // OnlinePlanner::requestNextTrajectory();
 

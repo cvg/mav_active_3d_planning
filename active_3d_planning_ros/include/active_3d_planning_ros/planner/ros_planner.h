@@ -80,6 +80,8 @@ class RosPlanner : public OnlinePlanner {
   // params
   double p_replan_pos_threshold_;  // m, when is the goal considered reached
   double p_replan_yaw_threshold_;  // rad
+  double p_replan_delay_sec_;  // number of seconds to wait before the planner replans, allows time for reaching goal
+  double p_replan_timeout_; // allows the robot timeout seconds to reach the target, otherwise trigger countdown to replan
   std::string p_goal_topics_;  // topic names for robot goal poses, multi-agent
 
   // override/adapt planner methods

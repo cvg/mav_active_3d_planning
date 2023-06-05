@@ -65,7 +65,7 @@ class OnlinePlanner : public PlannerI, public ModuleBase {
 
   void printError(const std::string& text) override;
 
-  virtual bool requestNextTrajectory();
+  // virtual bool requestNextTrajectory();
 
  protected:
   // factory access
@@ -134,7 +134,7 @@ class OnlinePlanner : public PlannerI, public ModuleBase {
 
   virtual void loopIteration();
 
-  // virtual bool requestNextTrajectory();
+  virtual bool requestNextTrajectory();
 
   virtual void expandTrajectories();
 
